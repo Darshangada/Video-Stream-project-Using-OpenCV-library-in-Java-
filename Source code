@@ -1,0 +1,324 @@
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
+
+public class VideoStreamProcessor {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
+
+    public static void main(String[] args) {
+        VideoCapture capture = new VideoCapture(0); // 0 is the default camera
+
+        if (!capture.isOpened()) {
+            System.out.println("Error: Camera not detected.");
+            return;
+        }
+
+        Mat frame = new Mat();
+        while (true) {
+            capture.read(frame);
+            if (frame.empty()) {
+                System.out.println("No video frame captured.");
+                break;
+            }
+
+            // Perform processing (e.g., object detection, facial recognition) here
+
+            // Show the processed frame
+            HighGui.imshow("Video Stream", frame);
+            if (HighGui.waitKey(30) >= 0) {
+                break; // Exit if any key is pressed
+            }
+        }
+        capture.release();
+        HighGui.destroyAllWindows();
+    }
+}
+
+
+****************************************************************************************************************************************************
+
+import org.opencv.core.Core;
+
+import org.opencv.core.Mat;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.osgi.OpenCVInterface;
+import org.opencv.videoio.VideoCapture;
+
+public class VideoCap {
+	public static void main(String[] args) {
+		int i=1;
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME); 
+		VideoCapture camera = new VideoCapture(0);
+		
+		if (!camera.isOpened()) {
+		    System.out.println("Error: Camera not opened");
+		} else {
+		    Mat frame = new Mat();
+
+		    while (true) {
+		    	
+		        if (camera.read(frame)) {
+		            System.out.println("Frame Obtained");
+		            System.out.println("Captured Frame Width: " + frame.width() + " Height: " + frame.height());
+		            Imgcodecs.imwrite("C:\\Users\\gadak\\Pictures\\Saved Pictures/camera"+i+".jpg", frame);
+		            System.out.println("Image saved successfully");
+		            break;
+		        }
+		        i++;
+		    }
+		}
+
+		camera.release();
+    }
+
+}
+
+****************************************************************************************************************************************************
+
+package videostream;
+
+import org.opencv.core.Core;
+
+import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.MatOfRect;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.videoio.VideoCapture;
+
+public class ObjectDetection {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
+
+    public static void main(String[] args) {
+        VideoCapture capture = new VideoCapture(0);
+        if (!capture.isOpened()) {
+            System.out.println("Error: Camera not detected.");
+            return;
+        }
+
+        // Load the Haar Cascade classifier for object detection
+        CascadeClassifier objectCascade = new CascadeClassifier("E:/Downloads/opencv/haarcascade_frontalcatface.xml");
+
+        Mat frame = new Mat();
+        while (true) {
+            capture.read(frame);
+            if (frame.empty()) {
+                System.out.println("No video frame captured.");
+                break;
+            }
+
+            Mat grayFrame = new Mat();
+            Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+
+            // Detect objects (e.g., faces) in the frame
+            MatOfRect objects = new MatOfRect();
+            objectCascade.detectMultiScale(grayFrame, objects);
+
+            // Draw rectangles around detected objects
+            for (Rect rect : objects.toArray()) {
+                Imgproc.rectangle(frame, rect.tl(), rect.br(), new Scalar(0, 255, 0), 2);
+            }
+
+            HighGui.imshow("Object Detection", frame);
+            if (HighGui.waitKey(30) >= 0) {
+                break;
+            }
+        }
+        capture.release();
+        HighGui.destroyAllWindows();
+    }
+}
+
+****************************************************************************************************************************************************
+
+package videostream;
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.video.BackgroundSubtractorMOG2;
+import org.opencv.video.Video;
+import org.opencv.videoio.VideoCapture;
+
+public class MotionTracking {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
+
+    public static void main(String[] args) {
+        VideoCapture capture = new VideoCapture(0);
+        if (!capture.isOpened()) {
+            System.out.println("Error: Camera not detected.");
+            return;
+        }
+
+        BackgroundSubtractorMOG2 bgSubtractor = Video.createBackgroundSubtractorMOG2();
+
+        Mat frame = new Mat();
+        Mat fgMask = new Mat();
+        while (true) {
+            capture.read(frame);
+            if (frame.empty()) {
+                System.out.println("No video frame captured.");
+                break;
+            }
+
+            // Apply background subtraction
+            bgSubtractor.apply(frame, fgMask);
+
+            // Optional: Post-process the foreground mask (e.g., smoothing, thresholding)
+            Imgproc.GaussianBlur(fgMask, fgMask, new Size(5, 5), 0);
+
+            // Show the foreground mask
+            HighGui.imshow("Motion Tracking", fgMask);
+            if (HighGui.waitKey(30) >= 0) {
+                break;
+            }
+        }
+        capture.release();
+        HighGui.destroyAllWindows();
+    }
+}
+
+****************************************************************************************************************************************************
+package videostream;
+
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.videoio.VideoCapture;
+
+
+public class FrontendVisualization extends JFrame {
+
+    private BufferedImage img;
+    private final VideoCapture capture = new VideoCapture(0);
+    private VideoPanel videoPanel;
+
+    public FrontendVisualization() {
+        setTitle("Video Display");
+        setSize(640, 480);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        videoPanel = new VideoPanel();
+        add(videoPanel);
+        setVisible(true);
+    }
+
+    private class VideoPanel extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (img != null) {
+                g.drawImage(img, 0, 0, null);
+            }
+        }
+
+        public void updateImage(Mat frame) {
+            if (!frame.empty()) {
+                img = matToBufferedImage(frame);
+                repaint();
+            }
+        }
+
+        private BufferedImage matToBufferedImage(Mat mat) {
+            int width = mat.width();
+            int height = mat.height();
+            BufferedImage bImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+            byte[] data = new byte[width * height * (int)mat.elemSize()];
+            mat.get(0, 0, data);
+            bImage.getRaster().setDataElements(0, 0, width, height, data);
+            return bImage;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+
+        FrontendVisualization frame = new FrontendVisualization();
+        VideoCapture capture = new VideoCapture(0);
+        Mat mat = new Mat();
+
+        while (capture.read(mat)) {
+            frame.videoPanel.updateImage(mat);
+            try {
+                Thread.sleep(30); // Adjust the sleep time to match your frame rate
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        capture.release();
+    }
+}
+
+****************************************************************************************************************************************************
+
+
+package videostream;
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.MatOfRect;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.videoio.VideoCapture;
+
+public class FacialRecognition {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
+
+    public static void main(String[] args) {
+        VideoCapture capture = new VideoCapture(0);
+        if (!capture.isOpened()) {
+            System.out.println("Error: Camera not detected.");
+            return;
+        }
+
+        CascadeClassifier faceCascade = new CascadeClassifier("E:/Downloads/opencv/haarcascade_frontalcatface.xml");
+
+        Mat frame = new Mat();
+        while (true) {
+            capture.read(frame);
+            if (frame.empty()) {
+                System.out.println("No video frame captured.");
+                break;
+            }
+
+            Mat grayFrame = new Mat();
+            Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+
+            MatOfRect faces = new MatOfRect();
+            faceCascade.detectMultiScale(grayFrame, faces);
+
+            for (Rect rect : faces.toArray()) {
+                Imgproc.rectangle(frame, rect.tl(), rect.br(), new Scalar(0, 255, 0), 2);
+            }
+
+            HighGui.imshow("Facial Recognition", frame);
+            if (HighGui.waitKey(30) >= 0) {
+                break;
+            }
+        }
+        capture.release();
+        HighGui.destroyAllWindows();
+    }
+}
